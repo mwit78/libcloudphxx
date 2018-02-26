@@ -57,9 +57,9 @@ namespace libcloudphxx
 	  );
         }
 
-	dot_rr += tmp;
-	dot_rc -= tmp;
-      }
+        dot_rr += tmp;
+        dot_rc -= tmp;
+     }
     }    
   };
 };

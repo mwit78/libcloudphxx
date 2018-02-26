@@ -44,15 +44,24 @@ namespace libcloudphxx
       assert(min(nc_cont) >= 0);
       assert(min(nr_cont) >= 0);
 
+      // TODO make them user parameters
+      //
+      real_t eps_nc = 1e-3;
+      real_t eps_rc = 1e-9;
+      real_t eps_nr = 1e-3;
+      real_t eps_rr = 1e-9;
+
       // TODO: rewrite so thet's not needed
+      /*
       assert(min(dot_nc_cont) == 0);
-      //assert(min(dot_nr_cont) == 0);
+      assert(min(dot_nr_cont) == 0);
       assert(min(dot_rc_cont) == 0);
-      //assert(min(dot_rr_cont) == 0);
+      assert(min(dot_rr_cont) == 0);
       assert(max(dot_nc_cont) == 0);
       assert(max(dot_nr_cont) == 0);
       assert(max(dot_rc_cont) == 0);
       assert(max(dot_rr_cont) == 0);
+      */
 
       using namespace formulae;
       using namespace common::moist_air;
@@ -89,11 +98,7 @@ namespace libcloudphxx
 
         // activation (see Morrison & Grabowski 2007)
         if (opts.acti)
-        { //TODO what if we have some other source terms (that happen somewhere before here), like diffusion?
-          assert(dot_rc == 0 && "activation is first");
-          assert(dot_nc == 0 && "activation is first");
-          assert(dot_th == 0 && "activation is first");
-
+        { 
           if (rv > common::const_cp::r_vs<real_t>(T, p))
           {
             // summing by looping over lognormal modes
@@ -110,34 +115,34 @@ namespace libcloudphxx
               ); 
             }
 
+            // calculate autoconversion rate
             quantity<divide_typeof_helper<si::frequency, si::mass>::type, real_t> tmp = 
               activation_rate<real_t>(n_ccn, nc / si::kilograms, dt * si::seconds);
 
-	    dot_nc += tmp * si::kilograms * si::seconds;  
-            dot_rv -= tmp * ccnmass<real_t>() * si::seconds;
-            dot_rc += tmp * ccnmass<real_t>() * si::seconds;
+            assert((tmp * si::kilograms * si::seconds) >= 0 && "activation can only increase cloud droplet concentration");
 
-            //TODO maybe some common part for all the forcings (for example dot_th)?
+            // augment source terms
+	    dot_nc += tmp * si::kilograms * si::seconds;  
+            dot_rc += tmp * ccnmass<real_t>() * si::seconds;
+            dot_rv -= tmp * ccnmass<real_t>() * si::seconds;
             dot_th -= tmp * ccnmass<real_t>() * d_th_d_rv<real_t>(T, th) / si::kelvins * si::seconds; 
           }
-
-          assert(dot_nc >= 0 && "activation can only increase cloud droplet concentration");
-          assert(dot_rc >= 0 && "activation can only increase cloud water");
-          assert(dot_th >= 0 && "activation can only increase theta");
         }
 
         // condensation/evaporation of cloud water (see Morrison & Grabowski 2007)
         if (opts.cond)
         {                          
-          if (rc > 0 && nc > 0)
-          {      //  ^^   TODO is it possible?
+          if (rc > eps_rc && nc > eps_nc)
+          { 
+            // calculate condensation/evaporation rate
             quantity<divide_typeof_helper<si::dimensionless, si::time>::type, real_t> tmp = 
               cond_evap_rate<real_t>(
                 T, p, rv, tau_relax_c(T, p, r_drop_c(rc, nc, rhod), rhod * nc / si::kilograms)
               );
-
+            
             assert(r_drop_c(rc, nc, rhod) >= 0 * si::metres  && "mean droplet radius cannot be < 0");
 
+            // TODO - are those checks still needed if I go with epsilons?
             if (rc + ((dot_rc / si::seconds + tmp) * (dt * si::seconds))  < 0)
             {   // so that we don't evaporate more cloud water than there is
               tmp     = -(rc + (dt * dot_rc)) / (dt * si::seconds);  // evaporate all rc
@@ -145,6 +150,7 @@ namespace libcloudphxx
             }
             dot_rc += tmp * si::seconds;
 
+            // TODO - are those checks still needed if I go with epsilons?
             if (rc + dot_rc * dt < 0)
             {  // (*)
                  // if rc is very small due to numerical reasons the above condition 
@@ -192,7 +198,7 @@ namespace libcloudphxx
         // autoconversion rate (as in Khairoutdinov and Kogan 2000, but see Wood 2005 table 1)
         if (opts.acnv)
         { 
-          if (rc > 0 && nc > 0)
+          if (rc > eps_rc && nc > eps_nc)
           {  
             quantity<si::frequency, real_t> tmp = autoconv_rate(rc, nc, rhod, 
                                                                 opts.acnv_A * si::dimensionless(), 
@@ -225,7 +231,7 @@ namespace libcloudphxx
         // accretion rate (as in Khairoutdinov and Kogan 2000, but see Wood 2005 table 1)
         if (opts.accr)
         {              
-          if (rc > 0 && nc > 0 && rr > 0)  
+          if (rc > eps_rc && nc > eps_nc && rr > eps_rr)  
           {                   
             quantity<si::frequency, real_t> tmp = accretion_rate(rc, rr);
             // so that accretion doesn't take more rc than there is
@@ -253,7 +259,7 @@ namespace libcloudphxx
         // has to be just after autoconv. and accretion so that dot_rr is a sum of only those two
         if (opts.acnv || opts.accr)
         {
-          if (nc > 0 && dot_rr > 0)  
+          if (nc > eps_nc && dot_rr > 0)  
           {                           
             quantity<divide_typeof_helper<si::frequency, si::mass>::type, real_t> tmp =
               collision_sink_rate(dot_rr / si::seconds, r_drop_c(rc, nc, rhod));
@@ -306,7 +312,7 @@ namespace libcloudphxx
         // evaporation of rain (see Morrison & Grabowski 2007)
         if (opts.cond)
         {
-          if (rr > 0 && nr_dim * si::kilograms > 0)
+          if (rr > eps_rr && nr_dim * si::kilograms > eps_nr)
           { // cond/evap for rr
             assert(rr_dim + dot_rr * dt >= 0 && "before rain cond-evap");
             assert(rv + dot_rv * dt >= 0 && "before rain cond-evap");
