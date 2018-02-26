@@ -5,6 +5,7 @@ set -ex
 mkdir build 
 cd build
 #if [[ $TRAVIS_OS_NAME == 'linux' && $CXX == 'clang++' ]]; then cmake ../; fi 
+
 if [[ $TRAVIS_OS_NAME == 'osx' ]]; then cmake .. -DPYTHON_LIBRARY=${PY_LIB} -DPYTHON_INCLUDE_DIR=${PY_INC}; fi
 
 # make with RelWithDebInfo to have high optimization with asserts on
