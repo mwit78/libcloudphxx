@@ -79,7 +79,6 @@ namespace libcloudphxx
               *nr / si::kilograms
             )
 	  ); 
-
           quantity<multiply_typeof_helper<si::velocity, si::mass_density>::type, real_t> tmp_mom_n  = -real_t(.5) * ( // averaging + axis orientation
 	    (*rhod_below * si::kilograms / si::cubic_metres) * formulae::v_term_n(
               *rhod_below * si::kilograms / si::cubic_metres, 
