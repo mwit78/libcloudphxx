@@ -24,10 +24,6 @@ namespace libcloudphxx
       // v_m = \int N(D) m(D) vt(D) dD
       // v_n = \int N(D)      vt(D) dD 
 
-      //TODO - make them user parameters
-      setup::real_t eps_nr = 1e-3; 
-      setup::real_t eps_rr = 1e-9; 
-
       libcloudphxx_const(si::length, d1,  134.43 * 1e-6, si::metres)
       libcloudphxx_const(si::length, d2, 1511.64 * 1e-6, si::metres)
       libcloudphxx_const(si::length, d3, 3477.84 * 1e-6, si::metres)
@@ -153,6 +149,10 @@ namespace libcloudphxx
         const quantity<si::dimensionless, real_t> &rr,
         const quantity<divide_typeof_helper<si::dimensionless, si::mass>::type, real_t> &nr
       ) { 
+        //TODO - make them user parameters
+        real_t eps_nr = 1e-3; 
+        real_t eps_rr = 1e-9; 
+
         if (rr <= eps_rr || nr <= eps_nr / si::kilograms) 
           return 0 * si::metres_per_second;
 
@@ -192,6 +192,10 @@ namespace libcloudphxx
         const quantity<si::dimensionless, real_t> &rr,
         const quantity<divide_typeof_helper<si::dimensionless, si::mass>::type, real_t> &nr
       ) { 
+        //TODO - make them user parameters
+        real_t eps_nr = 1e-3; 
+        real_t eps_rr = 1e-9; 
+
         if (rr <= eps_rr || nr <= eps_nr / si::kilograms) 
           return 0 * si::metres_per_second;
 
