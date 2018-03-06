@@ -46,7 +46,7 @@ namespace libcloudphxx
 
       // TODO make them user parameters
       //
-      real_t eps_nc = 1e-3;
+      real_t eps_nc = 1;
       real_t eps_rc = 1e-9;
       real_t eps_nr = 1e-3;
       real_t eps_rr = 1e-9;
@@ -120,6 +120,9 @@ namespace libcloudphxx
               activation_rate<real_t>(n_ccn, nc / si::kilograms, dt * si::seconds);
 
             assert((tmp * si::kilograms * si::seconds) >= 0 && "activation can only increase cloud droplet concentration");
+            // do not activate very small numbers (to avoid numerical problems with small numbers)
+            if(tmp * si::kilograms * dt *si::seconds <= eps_nc)
+              tmp = real_t(0) / si::kilograms / si::seconds;
 
             // augment source terms
 	    dot_nc += tmp * si::kilograms * si::seconds;  
