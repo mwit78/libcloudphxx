@@ -128,21 +128,31 @@ namespace libcloudphxx
 	  );
         }
 	bool incloud;
+        int it, max_it;
+        it = 0;
+        max_it = 100;
 
 	// TODO: rethink and document r_eps!!!
 	while (
+          //limit the number of iterations
+          //(it <= max_it) 
+          //&& 
 	  // condensation of cloud water if supersaturated more than a threshold
-	  (vapour_excess = rv - F.rs) > opts.r_eps
-	  || 
-          ( 
-            opts.cevp && vapour_excess < -opts.r_eps && ( // or if subsaturated and 
-	      (incloud = (rc > 0))  // in cloud (then cloud evaporation first)
-	      ||                    // or 
-              (opts.revp && rr > 0 && drr_max > 0) // in rain shaft (rain evaporation out-of-cloud)
-	    )
-          )
+	  //(
+            (vapour_excess = rv - F.rs) > opts.r_eps
+	    || 
+            ( 
+              opts.cevp && vapour_excess < -opts.r_eps && ( // or if subsaturated and 
+	        (incloud = (rc > 0))  // in cloud (then cloud evaporation first)
+	        ||                    // or 
+                (opts.revp && rr > 0 && drr_max > 0) // in rain shaft (rain evaporation out-of-cloud)
+	      )
+            )
+          //)
 	)
 	{
+          max_it += 1;
+
           // an arbitrary initial guess for drv
 	  real_t drv = - copysign(std::min(.5 * opts.r_eps, .5 * vapour_excess), vapour_excess); 
           // preventing negative mixing ratios if evaporating
