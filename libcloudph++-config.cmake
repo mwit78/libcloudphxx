@@ -17,8 +17,6 @@ elseif(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CONFIG_SUFFIX "_dbg")
 endif()
 
-#set(libcloudphxx_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/../../lib/libcloudphxx_lgrngn${CONFIG_SUFFIX}.so")
-
 if(APPLE)
   set(libcloudphxx_LIBRARIES "${CMAKE_CURRENT_LIST_DIR}/../../lib/libcloudphxx_lgrngn${CONFIG_SUFFIX}.dylib")
 else()
